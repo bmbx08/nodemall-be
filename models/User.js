@@ -13,9 +13,9 @@ const userSchema = Schema({
 userSchema.methods.toJSON = function () {
     const obj = this._doc;
     delete obj.password;
-    delete obj.___v;
-    delete obj.updateAt;
-    delete obj.createAt;
+    delete obj.__v;
+    delete obj.updatedAt;
+    delete obj.createdAt;
     return obj;
 }
 
