@@ -48,6 +48,16 @@ productController.getProducts=async(req,res)=>{
     }
 }
 
+productController.getProductDetail=async(req,res)=>{
+    try{
+        const productId = req.params.id;
+        const product = await Product.findById(productId);
+        res.status(200).json({status:"success",data:product});
+    }catch(error){
+        res.status(400).json({status:"error",error:error.message});
+    }
+}
+
 productController.updateProduct=async(req,res)=>{
     try{
         const productId = req.params.id;
