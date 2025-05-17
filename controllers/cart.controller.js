@@ -32,4 +32,35 @@ cartController.addItemToCart = async (req, res) => {
   }
 };
 
+cartController.getCart= async(req,res)=>{
+  try{
+    const {userId} = req;
+    const cart = await Cart.findOne({userId}).populate({
+      path:'items',
+      populate:{
+        path:'productId',
+        model:'Product',
+      }
+    });
+    res.status(200).json({status:"success", data:cart.items});
+  }catch(error){
+    return res.status(400).json({status:"fail",error:error.message});
+  }
+}
+
+cartController.deleteCartItem = async(req,res)=>{
+  try{
+    const {userId} = req;
+    const productId=req.params.id;
+    const cart = await Cart.findOne({userId});
+    //cart.items는 배열이므로 mongoose model 함수를 쓰면 오류가 뜸
+    // const deleteItem = await cart.items.findById(productId)
+    // if(!deleteItem) throw new Error("item doesn't exist")
+    // await cart.items.findByIdAndDelete(productId)
+    res.status(200).json({status:"success"})
+  }catch(error){
+    return res.status(400).json({status:"fail",error:error.message})
+  }
+}
+
 module.exports = cartController;
