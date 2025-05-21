@@ -33,10 +33,29 @@ orderController.createOrder = async (req, res) => {
     });
 
     await newOrder.save();
+    //save후에 카트를 비워주자
     res.status(200).json({status:"success",orderNum: newOrder.orderNum});
   } catch (error) {
     return res.status(400).json({status:"fail",error:error.message});
   }
 };
+
+orderController.getOrder = async(req,res) => {
+  try{
+    const {userId} = req;
+    const orderList = await Order.find({userId}).populate({
+      path:"items",
+      populate:{
+        path:"productId",
+        model:"Product",
+      }
+    });
+
+    console.log(orderList)
+    res.status(200).json({status:"success",orderList})
+  }catch(error){
+    return res.status(400).json({status:"fail", error:error.message})
+  }
+}
 
 module.exports = orderController;
