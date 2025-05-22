@@ -54,7 +54,6 @@ orderController.getOrder = async (req, res) => {
         model: "Product",
       },
     });
-    console.log(orderList);
     res.status(200).json({status: "success", orderList});
   } catch (error) {
     return res.status(400).json({status: "fail", error: error.message});
@@ -63,10 +62,9 @@ orderController.getOrder = async (req, res) => {
 
 orderController.getOrderList = async (req, res) => {
   try {
-    const {userId} = req;
     const {page, ordernum} = req.query;
 
-    const cond = ordernum ? {ordernum: {$regex: ordernum, $option: "i"}} : {};
+    const cond = ordernum ? {orderNum: {$regex: ordernum, $options: "i"}} : {};
     let query = Order.find(cond).populate({
       path: "items",
       populate: {
