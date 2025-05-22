@@ -1,7 +1,10 @@
 const orderController = {};
 const Order = require("../models/Order");
+const Product = require("../models/Product");
 const randomStringGenerator = require("../utils/randomStringGenerator");
 const productController = require("./product.controller");
+
+PAGE_SIZE = 5;
 
 orderController.createOrder = async (req, res) => {
   try {
@@ -15,7 +18,8 @@ orderController.createOrder = async (req, res) => {
 
     //재고가 충분하지 않는 아이템이 있었다 => 에러
     if (insufficientStockItems.length > 0) {
-      const errorMessage = insufficientStockItems.reduce( //.reduce()는 배열의 모든 요소를 하나의 값으로 줄일 때 사용용
+      const errorMessage = insufficientStockItems.reduce(
+        //.reduce()는 배열의 모든 요소를 하나의 값으로 줄일 때 사용용
         (total, item) => (total += item.message),
         ""
       );
@@ -29,33 +33,63 @@ orderController.createOrder = async (req, res) => {
       shipTo,
       contact,
       items: orderList,
-      orderNum: randomStringGenerator()
+      orderNum: randomStringGenerator(),
     });
 
     await newOrder.save();
     //save후에 카트를 비워주자
-    res.status(200).json({status:"success",orderNum: newOrder.orderNum});
+    res.status(200).json({status: "success", orderNum: newOrder.orderNum});
   } catch (error) {
-    return res.status(400).json({status:"fail",error:error.message});
+    return res.status(400).json({status: "fail", error: error.message});
   }
 };
 
-orderController.getOrder = async(req,res) => {
-  try{
+orderController.getOrder = async (req, res) => {
+  try {
     const {userId} = req;
     const orderList = await Order.find({userId}).populate({
-      path:"items",
-      populate:{
-        path:"productId",
-        model:"Product",
-      }
+      path: "items",
+      populate: {
+        path: "productId",
+        model: "Product",
+      },
     });
-
-    console.log(orderList)
-    res.status(200).json({status:"success",orderList})
-  }catch(error){
-    return res.status(400).json({status:"fail", error:error.message})
+    console.log(orderList);
+    res.status(200).json({status: "success", orderList});
+  } catch (error) {
+    return res.status(400).json({status: "fail", error: error.message});
   }
-}
+};
+
+orderController.getOrderList = async (req, res) => {
+  try {
+    const {userId} = req;
+    const {page, ordernum} = req.query;
+
+    const cond = ordernum ? {ordernum: {$regex: ordernum, $option: "i"}} : {};
+    let query = Order.find(cond).populate({
+      path: "items",
+      populate: {
+        path: "productId",
+        model: "Product",
+      },
+    });
+    let response = {state: "success"};
+    if (page) {
+      query.skip((page - 1) * PAGE_SIZE).limit(PAGE_SIZE);
+      //최종 몇개 페이지
+      const totalItemNum = await Order.countDocuments(cond);
+      //데이터가 총 개수/ PAGE_SIZE
+      const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+      response.totalPageNum = totalPageNum;
+    }
+
+    const orderList = await query.exec();
+    response.data = orderList;
+    res.status(200).json(response);
+  } catch (error) {
+    return res.status(400).json({status: "fail", error: error.message});
+  }
+};
 
 module.exports = orderController;
