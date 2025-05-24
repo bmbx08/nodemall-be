@@ -54,7 +54,10 @@ orderController.getOrder = async (req, res) => {
         model: "Product",
       },
     });
-    res.status(200).json({status: "success", orderList});
+    const totalItemNum = await Order.countDocuments({userId});
+    
+    const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+    res.status(200).json({status: "success", data:orderList, totalPageNum});
   } catch (error) {
     return res.status(400).json({status: "fail", error: error.message});
   }
@@ -85,6 +88,19 @@ orderController.getOrderList = async (req, res) => {
     const orderList = await query.exec();
     response.data = orderList;
     res.status(200).json(response);
+  } catch (error) {
+    return res.status(400).json({status: "fail", error: error.message});
+  }
+};
+
+orderController.updateOrder = async (req, res) => {
+  try {
+    console.log("received api");
+    const {id:orderId} = req.params;
+    const {status} = req.body;
+    const updateOrder = await Order.findByIdAndUpdate(orderId,{status},{new:true})
+    if(!updateOrder) throw new Error("can't find order");
+    res.status(200).json({status:"success", updateOrder})
   } catch (error) {
     return res.status(400).json({status: "fail", error: error.message});
   }
